@@ -1,0 +1,16 @@
+{
+    "Name": "LeopardDropLimit",
+    "Enabled": true,
+    
+    "Version": "0.1.0",
+    "Description": "Adds a 300 ton limit to the Leopard in the campaign. Drop limit configurable.",
+    "Author": "mpstark",
+    "Website": "www.github.com/mpstark/LeopardDropLimit",
+
+    "DLL": "LeopardDropLimit.dll",
+
+    "Settings": {
+        "MaxTonnage": 300,
+        "OnlyInSimGame": true
+    }
+}
