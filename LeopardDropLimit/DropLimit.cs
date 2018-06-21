@@ -1,56 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using Harmony;
 using BattleTech;
 using BattleTech.UI;
+using Harmony;
 using Newtonsoft.Json;
+
+// ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
 
 namespace LeopardDropLimit
 {
-    // CODE FROM MORPHYUM
-    public static class ReflectionHelper
-    {
-        public static object InvokePrivateMethode(object instance, string methodname, object[] parameters)
-        {
-            var type = instance.GetType();
-            var methodInfo = type.GetMethod(methodname, BindingFlags.NonPublic | BindingFlags.Instance);
-            return methodInfo.Invoke(instance, parameters);
-        }
-
-        public static object InvokePrivateMethode(object instance, string methodname, object[] parameters, Type[] types)
-        {
-            var type = instance.GetType();
-            var methodInfo = type.GetMethod(methodname, BindingFlags.NonPublic | BindingFlags.Instance, null, types, null);
-            return methodInfo.Invoke(instance, parameters);
-        }
-
-        public static void SetPrivateProperty(object instance, string propertyname, object value)
-        {
-            var type = instance.GetType();
-            var property = type.GetProperty(propertyname, BindingFlags.NonPublic | BindingFlags.Instance);
-            property.SetValue(instance, value, null);
-        }
-
-        public static void SetPrivateField(object instance, string fieldname, object value)
-        {
-            var type = instance.GetType();
-            var field = type.GetField(fieldname, BindingFlags.NonPublic | BindingFlags.Instance);
-            field.SetValue(instance, value);
-        }
-
-        public static object GetPrivateField(object instance, string fieldname)
-        {
-            var type = instance.GetType();
-            var field = type.GetField(fieldname, BindingFlags.NonPublic | BindingFlags.Instance);
-            return field.GetValue(instance);
-        }
-    }
-
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [HarmonyPatch(typeof(LanceConfiguratorPanel), "ValidateLance")]
     public static class LanceConfiguratorPanel_ValidateLance_Patch
     {
@@ -64,9 +24,10 @@ namespace LeopardDropLimit
             var mechs = new List<MechDef>();
             for (var i = 0; i < __instance.maxUnits; i++)
             {
-                var lanceLoadoutSlot = ((LanceLoadoutSlot[]) ReflectionHelper.GetPrivateField(__instance, "loadoutSlots"))[i];
+                var lanceLoadoutSlot = Traverse.Create(__instance).Field("loadoutSlots").GetValue<LanceLoadoutSlot[]>()[i];
 
-                if (lanceLoadoutSlot.SelectedMech == null) continue;
+                if (lanceLoadoutSlot.SelectedMech == null)
+                    continue;
 
                 mechs.Add(lanceLoadoutSlot.SelectedMech.MechDef);
                 lanceTonnage += lanceLoadoutSlot.SelectedMech.MechDef.Chassis.Tonnage;
@@ -77,10 +38,10 @@ namespace LeopardDropLimit
 
             __instance.lanceValid = false;
 
-            var headerWidget = ReflectionHelper.GetPrivateField(__instance, "headerWidget");
-            (headerWidget as LanceHeaderWidget).RefreshLanceInfo(__instance.lanceValid, "Lance cannot exceed tonnage limit", mechs);
+            var headerWidget = Traverse.Create(__instance).Field("headerWidget").GetValue<LanceHeaderWidget>();
+            headerWidget.RefreshLanceInfo(__instance.lanceValid, "Lance cannot exceed tonnage limit", mechs);
 
-            ReflectionHelper.SetPrivateField(__instance, "lanceErrorText", "Lance cannot exceed tonnage limit\n");
+            Traverse.Create(__instance).Field("lanceErrorText").SetValue("Lance cannot exceed tonnage limit\n");
 
             __result = __instance.lanceValid;
         }
